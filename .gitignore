@@ -1,0 +1,37 @@
+# ignore them
+
+data/
+
+
+# webapp/.gitignore
+.env
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+staticfiles/
+*.pt
+*.log
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+
+# Environment variables
+.env
+
+# Python virtual environments anywhere
+**/venv/
+**/.venv/
+
+# Scratch dumps
+project-dump.md
+project-dump2.md

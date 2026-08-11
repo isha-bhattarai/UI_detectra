@@ -1,0 +1,151 @@
+<!-- webapp/detector/templates/detector/upload.html -->
+{% extends "detector/base.html" %}
+{% load static %}
+{% block title %}Detectra — Deepfake Detection{% endblock %}
+{% block nav_upload %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'detector/css/upload.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="hero fade-up">
+  <span class="eyebrow"><span class="pulse-dot"></span> Detection engine online</span>
+  <h1>Detect deepfakes with confidence</h1>
+  <p class="sub">Drop a video or image below — Detectra auto-detects the media type, runs face-level neural inference, and shows you exactly why it made its decision.</p>
+</div>
+
+<div class="card fade-up" style="animation-delay:.05s">
+
+  <div class="mode-toggle" role="tablist" aria-label="Detection mode">
+    <button type="button" class="mode-btn active" data-mode="video" role="tab" aria-selected="true">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Video
+    </button>
+    <button type="button" class="mode-btn" data-mode="image" role="tab" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 8h.01M4 4h16a1 1 0 011 1v14a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Image
+    </button>
+  </div>
+
+  <div class="alert alert-info" id="image-mode-note" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.29 3.86l-8.18 14.18A1 1 0 003 19.5h18a1 1 0 00.89-1.46L13.71 3.86a1 1 0 00-1.42 0z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div><strong>Single-image mode:</strong> the model reads motion across video frames. For a still image, the detected face is repeated to fill that input — same trained network, but no real temporal signal. Video stays the more reliable mode.</div>
+  </div>
+
+  <!-- Two real forms post to the existing, unmodified Django endpoints.
+       Only one is ever populated + submitted, chosen by the unified drop zone below. -->
+  <form method="post" action="{% url 'detector:upload' %}" enctype="multipart/form-data" id="video-form" style="display:none;">
+    {% csrf_token %}
+    <input type="file" id="video-file-input" name="video">
+  </form>
+  <form method="post" action="{% url 'detector:upload_image' %}" enctype="multipart/form-data" id="image-form" style="display:none;">
+    {% csrf_token %}
+    <input type="file" id="image-file-input" name="image">
+  </form>
+
+  <form id="analyze-form">
+    <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Choose a file">
+      <div class="drop-zone-scan"></div>
+      <div class="drop-icon-wrap">
+        <span id="drop-icon" style="display:contents;"></span>
+      </div>
+      <div class="drop-label">
+        <strong id="drop-title">Drag and drop your video here</strong><br/>
+        or click to browse files
+        <div class="hint" id="drop-hint">MP4 · AVI · MOV · MKV · Max 100 MB</div>
+      </div>
+    </div>
+
+    <input type="file" id="shared-file-input" accept="video/*" style="display:none;">
+
+    <div class="file-preview panel" id="file-preview">
+      <div class="file-preview-icon" id="file-preview-icon"></div>
+      <div class="file-meta">
+        <div class="file-name" id="file-name"></div>
+        <div class="file-size" id="file-size"></div>
+      </div>
+      <button type="button" class="remove-btn" id="remove-btn" aria-label="Remove file">
+        <svg viewBox="0 0 24 24" fill="none" width="15" height="15"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <button class="btn btn-primary btn-block" type="submit" id="submit-btn" disabled style="margin-top:20px;">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Analyze
+    </button>
+  </form>
+
+  <div class="scan-console" id="scan-console">
+    <div class="scan-console-head">
+      <div class="scan-ring"></div>
+      <div>
+        <div class="scan-console-title">Detectra is analyzing your file</div>
+        <div class="scan-console-sub" id="scan-console-sub">Typically 20–60 seconds depending on video length</div>
+      </div>
+    </div>
+    <div class="scan-steps" id="scan-steps"></div>
+    <div class="progress-track"><div class="progress-fill"></div></div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section-title">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M9 17v-2m3 2v-4m3 4v-6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Model specification
+  </div>
+  <div class="info-grid">
+    <div class="info-card panel">
+      <div class="lbl">Architecture</div>
+      <div class="val">ResNeXt50 + LSTM</div>
+    </div>
+    <div class="info-card panel">
+      <div class="lbl">Face detector</div>
+      <div class="val">MTCNN</div>
+    </div>
+    <div class="info-card panel">
+      <div class="lbl">Val accuracy</div>
+      <div class="val">90.77%</div>
+    </div>
+  </div>
+
+  {% if recent %}
+  <div class="recent-strip">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Recent analyses
+    </div>
+    {% for r in recent %}
+    <a class="recent-row panel" href="{% url 'detector:result' r.pk %}">
+      <span class="badge badge-{{ r.label }}">{{ r.label }}</span>
+      <span class="recent-name">{{ r.filename }}</span>
+      <span class="recent-conf">{{ r.confidence|floatformat:1 }}%</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Server can request the image tab (e.g. after a validation error on that form)
+  window.DETECTRA_INITIAL_MODE = "{{ active_tab|default:'video' }}";
+</script>
+<script src="{% static 'detector/js/upload.js' %}"></script>
+<script>
+  document.querySelectorAll('.mode-btn').forEach(function (btn) {
+    if (btn.dataset.mode === window.DETECTRA_INITIAL_MODE) btn.click();
+  });
+  document.getElementById('image-mode-note').style.display =
+    window.DETECTRA_INITIAL_MODE === 'image' ? 'flex' : 'none';
+  document.querySelectorAll('.mode-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.getElementById('image-mode-note').style.display =
+        btn.dataset.mode === 'image' ? 'flex' : 'none';
+    });
+  });
+</script>
+{% endblock %}

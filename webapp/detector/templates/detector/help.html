@@ -1,0 +1,122 @@
+<!-- webapp/detector/templates/detector/help.html -->
+{% extends "detector/base.html" %}
+{% load static %}
+{% block title %}Detectra — Help{% endblock %}
+{% block nav_more %}active{% endblock %}
+{% block nav_help %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'detector/css/pages.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-head fade-up">
+  <span class="eyebrow"><span class="pulse-dot"></span> FAQ &amp; troubleshooting</span>
+  <h1>Help</h1>
+  <p class="sub">Answers to common questions about uploading, reading results, and what Detectra can and can't tell you.</p>
+</div>
+
+<div class="card fade-up" style="animation-delay:.05s">
+  <div class="section-title">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7 9m5-5l5 5M5 20h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Uploading
+  </div>
+  <div class="faq-list">
+
+    <details class="faq-item" open>
+      <summary class="faq-q">What file formats and sizes are supported?
+        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="faq-a">
+        <p>Video: <code>.mp4</code>, <code>.avi</code>, <code>.mov</code>, <code>.mkv</code>, up to 100&nbsp;MB. Image: <code>.jpg</code>, <code>.jpeg</code>, <code>.png</code>, up to 10&nbsp;MB. Exact limits are shown on the <a href="{% url 'detector:settings' %}">Settings</a> page, since they can vary by deployment.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">Why was my upload rejected?
+        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="faq-a">
+        <p>Usually one of three things: the file exceeds the size limit, the extension isn't in the supported list, or the file is empty/corrupted. All of this is checked <em>before</em> the file is saved or analyzed, so a rejection is instant.</p>
+        <p>If the file passed validation but analysis still failed, it's most likely that no face could be detected in it — a clearly visible, front-facing face is required.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">Is my uploaded file stored permanently?
+        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="faq-a">
+        <p>No. The original video or image is deleted immediately after inference completes. What <em>is</em> kept permanently is the prediction record — the verdict, confidence scores, and the small face/Grad-CAM grid images generated during analysis — so the result stays viewable at a stable URL and downloadable as a PDF later.</p>
+      </div>
+    </details>
+
+  </div>
+
+  <div class="section-title" style="margin-top:36px;">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M9 17v-2m3 2v-4m3 4v-6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Reading results
+  </div>
+  <div class="faq-list">
+
+    <details class="faq-item">
+      <summary class="faq-q">What do REAL, FAKE, and UNCERTAIN mean?
+        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="faq-a">
+        <p><strong>REAL</strong> or <strong>FAKE</strong> means the model's top prediction cleared the 75% confidence threshold. <strong>UNCERTAIN</strong> means neither class reached 75% — the media is ambiguous to the model, often due to low quality, partial face visibility, unusual lighting, or heavy compression. An uncertain result is not a third class; it's the model declining to force a call it isn't confident about.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">Why is single-image mode less reliable than video?
+        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="faq-a">
+        <p>Detectra's model expects a sequence of frames so its LSTM can look for frame-to-frame inconsistency over time. A single image has no time axis, so the one detected face is repeated 20 times to satisfy that input shape — the LSTM sees no real motion, and the verdict rests entirely on spatial (single-frame) features. Video mode uses genuine temporal analysis and is the more reliable mode whenever a video is available. See <a href="{% url 'detector:how_it_works' %}">How it works</a> for the full explanation.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">What is the Grad-CAM heatmap showing me?
+        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="faq-a">
+        <p>Red/yellow regions are the pixels that most influenced the model's decision; blue/dark regions had little influence. It commonly lights up around blending boundaries — jawline, hairline, eyes, teeth — which is where deepfake generation artifacts typically concentrate. It explains <em>where</em> the CNN looked, not how the LSTM weighed information across frames.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">How accurate is the model?
+        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="faq-a">
+        <p>90.77% accuracy on a held-out test set, with full precision/recall/F1/AUC-ROC figures and confusion matrix on the <a href="{% url 'detector:model' %}">Model details</a> page. That page also explains the dataset size limitation those numbers were measured on.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">Can I download or share a result?
+        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="faq-a">
+        <p>Every result has a permanent URL (<code>/result/&lt;id&gt;/</code>) and a "Download PDF report" button containing the verdict, confidence breakdown, face/Grad-CAM grids, and analysis metadata. The <a href="{% url 'detector:reports' %}">Reports</a> page lists recent analyses with one-click PDF downloads.</p>
+      </div>
+    </details>
+
+  </div>
+
+  <div class="help-cta">
+    <a class="btn btn-primary" href="{% url 'detector:upload' %}">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7 9m5-5l5 5M5 20h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Analyze a file
+    </a>
+    <a class="btn btn-secondary" href="{% url 'detector:how_it_works' %}">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      How it works
+    </a>
+  </div>
+</div>
+
+{% endblock %}

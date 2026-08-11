@@ -1,0 +1,128 @@
+<!-- webapp/detector/templates/detector/how_it_works.html -->
+{% extends "detector/base.html" %}
+{% load static %}
+{% block title %}Detectra — How It Works{% endblock %}
+{% block nav_more %}active{% endblock %}
+{% block nav_how_it_works %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'detector/css/pages.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-head fade-up">
+  <span class="eyebrow"><span class="pulse-dot"></span> Pipeline walkthrough</span>
+  <h1>How Detectra works</h1>
+  <p class="sub">From an uploaded file to a REAL / FAKE verdict — every stage the media passes through, in order, and why each one exists.</p>
+</div>
+
+<div class="card fade-up" style="animation-delay:.05s">
+  <div class="section-title">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Detection pipeline
+  </div>
+
+  <div class="pipeline">
+
+    <div class="pipeline-step">
+      <div class="pipeline-step-line"></div>
+      <div class="pipeline-step-num">1</div>
+      <div class="pipeline-step-body">
+        <div class="pipeline-step-title">Upload &amp; validation <span class="pipeline-step-tag">Django</span></div>
+        <div class="pipeline-step-desc">
+          The file is checked before anything touches disk: format (<code>.mp4 .avi .mov .mkv</code> for video, <code>.jpg .png</code> for image) and size (100&nbsp;MB video / 10&nbsp;MB image by default). If it fails, you get an error immediately — no wasted inference. Valid files are streamed to a temporary path under <code>media/uploads/</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <div class="pipeline-step-line"></div>
+      <div class="pipeline-step-num">2</div>
+      <div class="pipeline-step-body">
+        <div class="pipeline-step-title">Frame extraction <span class="pipeline-step-tag">OpenCV</span></div>
+        <div class="pipeline-step-desc">
+          For video, up to 150 frames are sampled evenly across the timeline with OpenCV — not just the first few seconds, so a manipulation that only appears mid-clip isn't missed. A single image skips this step; it is treated as one frame.
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <div class="pipeline-step-line"></div>
+      <div class="pipeline-step-num">3</div>
+      <div class="pipeline-step-body">
+        <div class="pipeline-step-title">Face detection &amp; crop <span class="pipeline-step-tag">MTCNN</span></div>
+        <div class="pipeline-step-desc">
+          Each frame is passed to MTCNN (via <code>facenet-pytorch</code>), which locates the face bounding box. Frames with no detectable face are discarded. Detected faces are cropped and resized to <code>112×112</code> with bilinear interpolation — the model only ever looks at the face region, not the background.
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <div class="pipeline-step-line"></div>
+      <div class="pipeline-step-num">4</div>
+      <div class="pipeline-step-body">
+        <div class="pipeline-step-title">Spatial feature extraction <span class="pipeline-step-tag">ResNeXt50-32x4d</span></div>
+        <div class="pipeline-step-desc">
+          Every cropped face is run through a pretrained ResNeXt50, fine-tuned on <code>layer4</code> only (the stem and layers 1–3 stay frozen at their ImageNet weights). Each frame becomes a 2048-dimensional feature vector describing textures, edges, and blending artifacts — the kind of pixel-level inconsistency deepfake generators tend to leave behind.
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <div class="pipeline-step-line"></div>
+      <div class="pipeline-step-num">5</div>
+      <div class="pipeline-step-body">
+        <div class="pipeline-step-title">Temporal modelling <span class="pipeline-step-tag">LSTM</span></div>
+        <div class="pipeline-step-desc">
+          The sequence of 20 sampled feature vectors is fed into a single LSTM layer (hidden size 2048, dropout 0.4). This is where video mode has a real advantage: the LSTM can catch frame-to-frame flicker and temporal inconsistency that a single still frame can never reveal. Output is pooled and passed through a linear layer to 2 classes.
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <div class="pipeline-step-line"></div>
+      <div class="pipeline-step-num">6</div>
+      <div class="pipeline-step-body">
+        <div class="pipeline-step-title">Verdict &amp; confidence <span class="pipeline-step-tag">Softmax</span></div>
+        <div class="pipeline-step-desc">
+          A softmax turns the two output logits into P(Real) and P(Fake). Whichever is higher becomes the label — <strong>unless</strong> the winning probability is below the 75% confidence threshold, in which case the result is reported as <strong>UNCERTAIN</strong> rather than forcing a call the model isn't sure about.
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <div class="pipeline-step-num">7</div>
+      <div class="pipeline-step-body">
+        <div class="pipeline-step-title">Grad-CAM explainability <span class="pipeline-step-tag">layer4 hook</span></div>
+        <div class="pipeline-step-desc">
+          Alongside the verdict, Grad-CAM hooks into ResNeXt's <code>layer4</code> to compute which pixels most influenced the decision, producing a red/yellow heatmap over the face. This runs per-request via forward/backward hooks that are removed immediately after — it never modifies the trained weights. See the result page for the heatmap grid on any past analysis.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="divider">
+
+  <div class="section-title">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.29 3.86l-8.18 14.18A1 1 0 003 19.5h18a1 1 0 00.89-1.46L13.71 3.86a1 1 0 00-1.42 0z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Video vs. single-image mode
+  </div>
+  <p style="font-size:14px;color:var(--text-muted);line-height:1.75;">
+    Video mode gives the LSTM a genuine sequence of 20 distinct frames to reason over — real temporal signal. Single-image mode repeats the one detected face 20 times to satisfy the model's fixed input shape, so the LSTM sees no actual motion and contributes nothing beyond passing ResNeXt's spatial features through unchanged. Both modes use the exact same trained checkpoint; nothing is retrained or swapped out. Treat image-mode results as a spatial-only estimate, and prefer video whenever a video source is available.
+  </p>
+
+  <div class="actions" style="margin-top:28px;">
+    <a class="btn btn-primary" href="{% url 'detector:upload' %}">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7 9m5-5l5 5M5 20h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Try it now
+    </a>
+    <a class="btn btn-secondary" href="{% url 'detector:model' %}">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M9.5 3.5l-6 3.5v10l6 3.5 6-3.5v-10l-6-3.5z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      View model details
+    </a>
+  </div>
+</div>
+
+{% endblock %}

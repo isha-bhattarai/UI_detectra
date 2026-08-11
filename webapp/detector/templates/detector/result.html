@@ -1,0 +1,181 @@
+<!-- webapp/detector/templates/detector/result.html -->
+{% extends "detector/base.html" %}
+{% load static %}
+{% block title %}Detectra — Result{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'detector/css/result.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="result-head fade-up">
+  <span class="eyebrow"><span class="pulse-dot"></span> Analysis complete</span>
+  <h1>Detection result</h1>
+</div>
+
+<div class="card fade-up" style="animation-delay:.05s" id="result-card"
+     data-real-prob="{{ real_prob }}" data-fake-prob="{{ fake_prob }}" data-confidence="{{ confidence }}">
+
+  {% if report_error %}
+  <div class="alert alert-warning">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.29 3.86l-8.18 14.18A1 1 0 003 19.5h18a1 1 0 00.89-1.46L13.71 3.86a1 1 0 00-1.42 0z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div>{{ report_error }}</div>
+  </div>
+  {% endif %}
+
+  <div class="verdict {{ label }}">
+    <div class="verdict-icon">
+      {% if label == "REAL" %}
+      <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      {% elif label == "FAKE" %}
+      <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      {% else %}
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.29 3.86l-8.18 14.18A1 1 0 003 19.5h18a1 1 0 00.89-1.46L13.71 3.86a1 1 0 00-1.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      {% endif %}
+    </div>
+    <div class="verdict-left">
+      <div class="verdict-eyebrow">
+        {% if label == "REAL" %}No manipulation detected{% elif label == "FAKE" %}Manipulation detected{% else %}Inconclusive{% endif %}
+        &nbsp;·&nbsp; {{ detection_mode|title }} mode
+      </div>
+      <div class="verdict-label">{{ label }}</div>
+      <div class="verdict-conf">Confidence: <strong>{{ confidence }}%</strong></div>
+    </div>
+    <div class="verdict-ring">
+      <svg viewBox="0 0 76 76">
+        <circle class="verdict-ring-track" cx="38" cy="38" r="34"></circle>
+        <circle class="verdict-ring-fill" id="verdict-ring-fill" cx="38" cy="38" r="34"
+          stroke-dasharray="213.6" stroke-dashoffset="213.6"></circle>
+      </svg>
+      <div class="verdict-ring-text">{{ confidence }}%</div>
+    </div>
+  </div>
+
+  {% if label == "UNCERTAIN" %}
+  <div class="alert alert-warning">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.29 3.86l-8.18 14.18A1 1 0 003 19.5h18a1 1 0 00.89-1.46L13.71 3.86a1 1 0 00-1.42 0z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div>The model's confidence (<strong>{{ confidence }}%</strong>) is below the 75% threshold, so this could not be classified with sufficient certainty. This can happen with low-quality media, partial face visibility, or unusual lighting. Try a higher quality upload.</div>
+  </div>
+  {% endif %}
+
+  {% if detection_mode == "image" %}
+  <div class="alert alert-info">
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5m0-8h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <div><strong>Single-image mode:</strong> the detected face was repeated to fill the model's temporal input — no real motion signal was available, so treat this result as a spatial-only estimate.</div>
+  </div>
+  {% endif %}
+
+  <div class="prob-row">
+    <div class="prob-card real panel">
+      <div class="plabel">P(Real)</div>
+      <div class="pvalue">{{ real_prob }}%</div>
+    </div>
+    <div class="prob-card fake panel">
+      <div class="plabel">P(Fake)</div>
+      <div class="pvalue">{{ fake_prob }}%</div>
+    </div>
+  </div>
+
+  <div class="bar-wrap">
+    <div class="bar-label"><span>Real</span><span>{{ real_prob }}%</span></div>
+    <div class="bar-track"><div class="bar-fill real" id="bar-real" style="width:0%"></div></div>
+  </div>
+  <div class="bar-wrap">
+    <div class="bar-label"><span>Fake</span><span>{{ fake_prob }}%</span></div>
+    <div class="bar-track"><div class="bar-fill fake" id="bar-fake" style="width:0%"></div></div>
+  </div>
+
+  <hr class="divider">
+
+  {% if face_grid_url or gradcam_grid_url %}
+  <div class="section-title">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M4 7V5a2 2 0 012-2h2M4 17v2a2 2 0 002 2h2m8-16h2a2 2 0 012 2v2m-4 12h2a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Visual explainability
+  </div>
+  <div class="visual-grid">
+    {% if face_grid_url %}
+    <div class="visual-card panel">
+      <div class="visual-card-head">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 8h.01M4 4h16a1 1 0 011 1v14a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Analyzed facial regions
+      </div>
+      <div class="visual-img-wrap" data-full="{{ face_grid_url }}">
+        <img src="{{ face_grid_url }}" alt="Detected face regions" loading="lazy" />
+      </div>
+      <div class="visual-caption">Green boxes mark faces detected by MTCNN. {{ frames_analyzed }} frame{{ frames_analyzed|pluralize }} with faces were passed to the model.</div>
+    </div>
+    {% endif %}
+
+    {% if gradcam_grid_url %}
+    <div class="visual-card panel">
+      <div class="visual-card-head">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M12 2v3m0 14v3m10-10h-3M5 12H2m15.07-7.07l-2.12 2.12M9.05 14.95l-2.12 2.12m12.14 0l-2.12-2.12M9.05 9.05L6.93 6.93" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        Grad-CAM — model attention
+      </div>
+      <div class="visual-img-wrap" data-full="{{ gradcam_grid_url }}">
+        <img src="{{ gradcam_grid_url }}" alt="Grad-CAM heatmap overlay" loading="lazy" />
+      </div>
+      <div class="visual-caption">Red/yellow regions weighed most heavily in the {{ label }} decision. Computed via Grad-CAM on ResNeXt50 layer4.</div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="section-title">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M9 17v-2m3 2v-4m3 4v-6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Analysis details
+  </div>
+  <div class="meta-grid">
+    <div class="meta-item panel">
+      <div class="k">File analyzed</div>
+      <div class="v">{{ filename }}</div>
+    </div>
+    <div class="meta-item panel">
+      <div class="k">Detection mode</div>
+      <div class="v">{{ detection_mode|title }}</div>
+    </div>
+    <div class="meta-item panel">
+      <div class="k">Frames with faces</div>
+      <div class="v">{{ frames_analyzed }}</div>
+    </div>
+    <div class="meta-item panel">
+      <div class="k">Processing time</div>
+      <div class="v">{{ processing_time }}s</div>
+    </div>
+    <div class="meta-item panel">
+      <div class="k">Model architecture</div>
+      <div class="v">ResNeXt50 + LSTM</div>
+    </div>
+    <div class="meta-item panel">
+      <div class="k">Face detector</div>
+      <div class="v">MTCNN (facenet-pytorch)</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <a class="btn btn-primary" href="{% url 'detector:upload' %}">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M19 12H5m0 0l7 7m-7-7l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Analyze another file
+    </a>
+    <a class="btn btn-secondary" href="{% url 'detector:history' %}">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      View history
+    </a>
+    <a class="btn btn-secondary" href="{% url 'detector:download_report' record.pk %}">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Download PDF report
+    </a>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+  <img id="lightbox-img" src="" alt="Enlarged view" />
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'detector/js/result.js' %}"></script>
+{% endblock %}

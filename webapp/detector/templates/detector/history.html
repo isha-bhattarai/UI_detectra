@@ -1,0 +1,90 @@
+<!-- webapp/detector/templates/detector/history.html -->
+{% extends "detector/base.html" %}
+{% load static %}
+{% block title %}Detectra — Prediction History{% endblock %}
+{% block nav_history %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'detector/css/history.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="dash-head fade-up">
+  <span class="eyebrow"><span class="pulse-dot"></span> Live audit trail</span>
+  <h1>Prediction history</h1>
+  <p class="sub">Every analysis Detectra has run, pulled straight from the database.</p>
+</div>
+
+<div class="stats-row fade-up" style="animation-delay:.05s">
+  <div class="stat-card panel">
+    <div class="num">{{ counts.total }}</div>
+    <div class="lbl">Total analyzed</div>
+  </div>
+  <div class="stat-card panel">
+    <div class="num num-real">{{ counts.real }}</div>
+    <div class="lbl">Classified real</div>
+  </div>
+  <div class="stat-card panel">
+    <div class="num num-fake">{{ counts.fake }}</div>
+    <div class="lbl">Classified fake</div>
+  </div>
+  <div class="stat-card panel">
+    <div class="num num-uncertain">{{ counts.uncertain }}</div>
+    <div class="lbl">Uncertain</div>
+  </div>
+</div>
+
+<div class="card fade-up" style="animation-delay:.1s">
+  {% if records %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Filename</th>
+          <th>Mode</th>
+          <th>Result</th>
+          <th>Confidence</th>
+          <th>Frames</th>
+          <th>Time</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td class="cell-pk">{{ r.pk }}</td>
+          <td class="cell-fname" title="{{ r.filename }}">{{ r.filename }}</td>
+          <td><span class="mode-pill">{{ r.detection_mode }}</span></td>
+          <td><span class="badge badge-{{ r.label }}">{{ r.label }}</span></td>
+          <td class="cell-mono">
+            <span class="conf-cell">
+              {{ r.confidence|floatformat:1 }}%
+              <span class="conf-bar">
+                <span class="conf-fill fill-{{ r.label }}" data-width="{{ r.confidence }}"></span>
+              </span>
+            </span>
+          </td>
+          <td class="cell-mono">{{ r.frames_analyzed }}</td>
+          <td class="cell-mono">{{ r.processing_time|floatformat:1 }}s</td>
+          <td class="cell-date">{{ r.created_at|date:"M d, H:i" }}</td>
+          <td><a class="view-link" href="{% url 'detector:result' r.pk %}">View →</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    No predictions yet. <a href="{% url 'detector:upload' %}">Upload a video</a> to get started.
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'detector/js/history.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,147 @@
+<!-- webapp/detector/templates/detector/reports.html -->
+{% extends "detector/base.html" %}
+{% load static %}
+{% block title %}Detectra — Reports{% endblock %}
+{% block nav_reports %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'detector/css/pages.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-head fade-up">
+  <span class="eyebrow"><span class="pulse-dot"></span> Aggregate analytics</span>
+  <h1>Reports</h1>
+  <p class="sub">A summary view across every analysis Detectra has run, plus one-click PDF downloads for individual results. For the full raw log, see <a href="{% url 'detector:history' %}" style="color:var(--brand-2);">History</a>.</p>
+</div>
+
+{% if has_records %}
+
+<div class="stats-row fade-up" style="animation-delay:.05s">
+  <div class="stat-card panel">
+    <div class="num">{{ overview.total }}</div>
+    <div class="lbl">Total analyzed</div>
+  </div>
+  <div class="stat-card panel">
+    <div class="num num-real">{{ overview.real }}</div>
+    <div class="lbl">Classified real</div>
+  </div>
+  <div class="stat-card panel">
+    <div class="num num-fake">{{ overview.fake }}</div>
+    <div class="lbl">Classified fake</div>
+  </div>
+  <div class="stat-card panel">
+    <div class="num num-uncertain">{{ overview.uncertain }}</div>
+    <div class="lbl">Uncertain</div>
+  </div>
+</div>
+
+<div class="card fade-up" style="animation-delay:.1s">
+  <div class="section-title">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M9 17v-2m3 2v-4m3 4v-6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Averages across all analyses
+  </div>
+  <div class="info-grid">
+    <div class="info-card panel">
+      <div class="lbl">Avg. confidence</div>
+      <div class="val">{{ aggregates.avg_confidence|default:0|floatformat:1 }}%</div>
+    </div>
+    <div class="info-card panel">
+      <div class="lbl">Avg. processing time</div>
+      <div class="val">{{ aggregates.avg_proc_time|default:0|floatformat:1 }}s</div>
+    </div>
+    <div class="info-card panel">
+      <div class="lbl">Avg. frames analyzed</div>
+      <div class="val">{{ aggregates.avg_frames|default:0|floatformat:0 }}</div>
+    </div>
+  </div>
+
+  <div class="meta-grid" style="margin-top:14px;">
+    <div class="meta-item panel"><div class="k">Video-mode analyses</div><div class="v">{{ overview.video }}</div></div>
+    <div class="meta-item panel"><div class="k">Image-mode analyses</div><div class="v">{{ overview.image }}</div></div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section-title">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M9 21V9" stroke="currentColor" stroke-width="1.6"/></svg>
+    Breakdown by verdict
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Verdict</th><th>Count</th><th>Share</th><th>Avg. confidence</th></tr>
+      </thead>
+      <tbody>
+        {% for row in by_label %}
+        <tr>
+          <td><span class="badge badge-{{ row.label }}">{{ row.label }}</span></td>
+          <td class="cell-mono">{{ row.count }}</td>
+          <td class="cell-mono">{% widthratio row.count overview.total 100 %}%</td>
+          <td class="cell-mono">{{ row.avg_confidence|floatformat:1 }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section-title">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Recent reports
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Filename</th>
+          <th>Mode</th>
+          <th>Result</th>
+          <th>Confidence</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td class="cell-pk">{{ r.pk }}</td>
+          <td class="cell-fname" title="{{ r.filename }}">{{ r.filename }}</td>
+          <td><span class="mode-pill">{{ r.detection_mode }}</span></td>
+          <td><span class="badge badge-{{ r.label }}">{{ r.label }}</span></td>
+          <td class="cell-mono">{{ r.confidence|floatformat:1 }}%</td>
+          <td class="cell-date">{{ r.created_at|date:"M d, H:i" }}</td>
+          <td><a class="view-link" href="{% url 'detector:download_report' r.pk %}">
+            <svg viewBox="0 0 24 24" fill="none" width="13" height="13"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            PDF
+          </a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="actions">
+    <a class="btn btn-primary" href="{% url 'detector:upload' %}">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7 9m5-5l5 5M5 20h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Analyze another file
+    </a>
+    <a class="btn btn-secondary" href="{% url 'detector:history' %}">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      View full history
+    </a>
+  </div>
+</div>
+
+{% else %}
+<div class="card fade-up" style="animation-delay:.05s">
+  <div class="empty-state">
+    No analyses yet. <a href="{% url 'detector:upload' %}">Upload a video or image</a> to generate your first report.
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

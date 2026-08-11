@@ -1,0 +1,75 @@
+<!-- webapp/detector/templates/detector/settings.html -->
+{% extends "detector/base.html" %}
+{% load static %}
+{% block title %}Detectra — Settings{% endblock %}
+{% block nav_more %}active{% endblock %}
+{% block nav_settings %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'detector/css/pages.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-head fade-up">
+  <span class="eyebrow"><span class="pulse-dot"></span> Live server configuration</span>
+  <h1>Settings</h1>
+  <p class="sub">The actual values the running server is using right now — not a form, since Detectra has no user accounts or settings-persistence layer to save changes to.</p>
+</div>
+
+<div class="card fade-up" style="animation-delay:.05s">
+
+  <div class="alert alert-info">
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5m0-8h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <div><strong>Read-only.</strong> These values come from environment variables and Django settings on the server. To change them, edit <code>webapp/.env</code> or <code>webapp/webapp/settings/</code> and restart the server.</div>
+  </div>
+
+  <div class="settings-group">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7 9m5-5l5 5M5 20h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Upload limits
+    </div>
+    <div class="kv-list">
+      {% for item in config.upload %}
+      <div class="kv-row panel"><div class="k">{{ item.label }}</div><div class="v">{{ item.value }}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="settings-group">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M9.5 3.5l-6 3.5v10l6 3.5 6-3.5v-10l-6-3.5z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Model &amp; inference
+    </div>
+    <div class="kv-list">
+      {% for item in config.inference %}
+      <div class="kv-row panel"><div class="k">{{ item.label }}</div><div class="v">{{ item.value }}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="settings-group">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.23.5.7.85 1.24 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Runtime environment
+    </div>
+    <div class="kv-list">
+      {% for item in config.runtime %}
+      <div class="kv-row panel"><div class="k">{{ item.label }}</div><div class="v">{{ item.value }}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="actions">
+    <a class="btn btn-secondary" href="{% url 'detector:model' %}">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M9.5 3.5l-6 3.5v10l6 3.5 6-3.5v-10l-6-3.5z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      View model details
+    </a>
+    <a class="btn btn-secondary" href="{% url 'detector:help' %}">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5m0-8h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Get help
+    </a>
+  </div>
+</div>
+
+{% endblock %}
