@@ -409,22 +409,27 @@ def how_it_works_view(request):
 # checkpoints/best_acc.pt. They are static because re-running evaluation is a
 # manual training-pipeline step, not something a web request should trigger.
 MODEL_EVAL_METRICS = {
-    "accuracy":    90.77,
-    "recall":      96.88,
-    "specificity": 84.85,
-    "precision":   86.11,
-    "f1":          91.18,
-    "auc_roc":     0.9337,
+    "accuracy": 90.78,
+    "recall": 96.67,
+    "specificity": 84.89,
+    "precision": 86.48,
+    "f1": 91.32,
+    "auc_roc": 0.9337,
+
     "confusion": {
-        "tn": 28, "fp": 5,
-        "fn": 1,  "tp": 31,
+        "tn": 382,
+        "fp": 68,
+        "fn": 15,
+        "tp": 435,
     },
-    "test_samples": 65,
-    "test_real":    33,
-    "test_fake":    32,
-    "best_epoch":     19,
-    "total_epochs":   20,
-    "best_val_loss":  0.3228,
+
+    "test_samples": 900,
+    "test_real": 450,
+    "test_fake": 450,
+
+    "best_epoch": 19,
+    "total_epochs": 20,
+    "best_val_loss": 0.3228,
 }
 
 
