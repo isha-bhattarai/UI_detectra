@@ -19,7 +19,7 @@ from typing import Optional
 from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
 from django.db.models import Avg, Count
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 
@@ -355,6 +355,43 @@ def history_view(request):
         "records": records[:50],
         "counts":  counts,
     })
+
+
+# ── Delete history record ─────────────────────────────────────────────────────
+
+@require_http_methods(["POST"])
+def delete_record_view(request, pk: int):
+    """
+    Delete a single PredictionRecord and its saved grid images.
+
+    POST-only (Detectra has no user accounts, see settings_view — deletion is
+    scoped by primary key, not by owner). CSRF is enforced by Django's
+    CsrfViewMiddleware, which is active for the whole app. Called via fetch()
+    from the History page's delete confirmation modal.
+    """
+    try:
+        record = PredictionRecord.objects.get(pk=pk)
+    except PredictionRecord.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Record not found."}, status=404)
+
+    for rel_path in (record.face_grid_path, record.gradcam_grid_path):
+        if rel_path:
+            abs_path = Path(settings.MEDIA_ROOT) / rel_path
+            try:
+                if abs_path.exists():
+                    os.remove(abs_path)
+            except OSError as e:
+                logger.warning(f"Could not delete media file {abs_path}: {e}")
+
+    record_id = record.pk
+    try:
+        record.delete()
+    except Exception as e:
+        logger.error(f"Failed to delete record id={record_id}: {e}")
+        return JsonResponse({"success": False, "error": "Deletion failed. Please try again."}, status=500)
+
+    logger.info(f"Deleted prediction record id={record_id}")
+    return JsonResponse({"success": True, "id": record_id})
 
 
 # ── How it works view ───────────────────────────────────────────────────────────

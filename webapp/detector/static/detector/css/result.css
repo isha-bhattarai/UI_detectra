@@ -36,8 +36,9 @@
   border-radius: 18px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.7);
+  box-shadow: var(--clay-highlight);
 }
 .verdict-icon svg { width: 30px; height: 30px; }
 .REAL .verdict-icon      { color: var(--real);      box-shadow: 0 0 24px -4px var(--real-glow); }
@@ -58,16 +59,18 @@
   font-weight: 800;
   font-family: var(--font-mono);
   letter-spacing: -0.01em;
-  color: #fff;
-  text-shadow: 0 0 30px var(--glow-color);
+  color: var(--text);
 }
+.REAL .verdict-label      { color: var(--real-text); }
+.FAKE .verdict-label      { color: var(--fake-text); }
+.UNCERTAIN .verdict-label { color: var(--uncertain-text); }
 
 .verdict-conf { font-size: 13.5px; color: var(--text-soft); margin-top: 8px; }
-.verdict-conf strong { color: #fff; font-family: var(--font-mono); }
+.verdict-conf strong { color: var(--text); font-family: var(--font-mono); }
 
 .verdict-ring { flex-shrink: 0; width: 76px; height: 76px; position: relative; }
 .verdict-ring svg { width: 76px; height: 76px; transform: rotate(-90deg); }
-.verdict-ring-track { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 5; }
+.verdict-ring-track { fill: none; stroke: rgba(255,255,255,0.6); stroke-width: 5; }
 .verdict-ring-fill { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1); }
 .REAL .verdict-ring-fill      { stroke: var(--real);      filter: drop-shadow(0 0 6px var(--real-glow)); }
 .FAKE .verdict-ring-fill      { stroke: var(--fake);      filter: drop-shadow(0 0 6px var(--fake-glow)); }
@@ -76,7 +79,7 @@
 .verdict-ring-text {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 800; font-family: var(--font-mono); color: #fff;
+  font-size: 14px; font-weight: 800; font-family: var(--font-mono); color: var(--text);
 }
 
 /* ── Probability cards + bars ── */
@@ -89,8 +92,8 @@
   text-transform: uppercase; letter-spacing: 0.07em; font-family: var(--font-mono); font-weight: 650;
 }
 .prob-card .pvalue { font-size: 30px; font-weight: 800; font-family: var(--font-mono); }
-.prob-card.real .pvalue { color: var(--real); }
-.prob-card.fake .pvalue { color: var(--fake); }
+.prob-card.real .pvalue { color: var(--real-text); }
+.prob-card.fake .pvalue { color: var(--fake-text); }
 
 .bar-wrap { margin-bottom: 16px; }
 .bar-label {
@@ -98,7 +101,7 @@
   font-size: 12.5px; color: var(--text-faint); margin-bottom: 7px; font-family: var(--font-mono);
 }
 .bar-label span:first-child { color: var(--text-soft); font-weight: 650; }
-.bar-track { height: 9px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
+.bar-track { height: 9px; background: var(--track-bg); border-radius: 99px; overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 99px; width: 0%; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
 .bar-fill.real { background: linear-gradient(90deg, #17b98f, var(--real)); box-shadow: 0 0 12px -2px var(--real-glow); }
 .bar-fill.fake { background: linear-gradient(90deg, #d92955, var(--fake)); box-shadow: 0 0 12px -2px var(--fake-glow); }
@@ -155,7 +158,7 @@
 .lightbox img { max-width: 100%; max-height: 100%; border-radius: var(--r-md); box-shadow: var(--shadow-lg); }
 .lightbox-close {
   position: absolute; top: 22px; right: 26px;
-  background: var(--glass-strong); border: 1px solid var(--border-strong);
+  background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.28);
   color: #fff; width: 38px; height: 38px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center; cursor: pointer;
 }

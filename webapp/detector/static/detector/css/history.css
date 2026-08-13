@@ -18,9 +18,9 @@
 }
 
 .stat-card .num { font-size: 32px; font-weight: 800; color: var(--text); font-family: var(--font-mono); }
-.stat-card .num-real      { color: var(--real); }
-.stat-card .num-fake      { color: var(--fake); }
-.stat-card .num-uncertain { color: var(--uncertain); }
+.stat-card .num-real      { color: var(--real-text); }
+.stat-card .num-fake      { color: var(--fake-text); }
+.stat-card .num-uncertain { color: var(--uncertain-text); }
 
 .stat-card .lbl {
   font-size: 11.5px; color: var(--text-faint); margin-top: 7px;
@@ -38,7 +38,7 @@ table { width: 100%; border-collapse: collapse; font-size: 14px; }
 
 th {
   text-align: left; padding: 14px 16px; color: var(--text-muted); font-weight: 650;
-  background: rgba(255,255,255,0.02);
+  background: var(--surface-tint);
   border-bottom: 1px solid var(--border);
   font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
   font-family: var(--font-mono); white-space: nowrap;
@@ -46,10 +46,10 @@ th {
 
 td { padding: 15px 16px; border-bottom: 1px solid var(--border-hairline); color: var(--text); vertical-align: middle; }
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: rgba(255,255,255,0.02); }
+tr:hover td { background: var(--overlay-soft); }
 
 .conf-cell { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
-.conf-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; width: 68px; display: inline-block; vertical-align: middle; }
+.conf-bar { height: 6px; background: var(--track-bg); border-radius: 99px; overflow: hidden; width: 68px; display: inline-block; vertical-align: middle; }
 .conf-fill { height: 100%; border-radius: 99px; width: 0%; transition: width 0.8s var(--ease); }
 .conf-fill.fill-REAL      { background: var(--real); }
 .conf-fill.fill-FAKE      { background: var(--fake); }
@@ -70,15 +70,76 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 
 .view-link {
   display: inline-flex; align-items: center; gap: 5px;
-  color: var(--brand-2); text-decoration: none; font-size: 13px; font-weight: 650;
+  color: var(--brand-text); text-decoration: none; font-size: 13px; font-weight: 650;
   padding: 7px 13px; border: 1px solid var(--border); border-radius: var(--r-sm);
   transition: border-color 0.15s var(--ease), transform 0.15s var(--ease), background 0.15s var(--ease);
   white-space: nowrap;
 }
 .view-link:hover { border-color: var(--brand-line); background: var(--brand-soft); transform: translateY(-1px); }
 
+.cell-actions { white-space: nowrap; }
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.delete-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-sans); font-size: 13px; font-weight: 650;
+  color: var(--fake-text); background: transparent;
+  border: 1px solid var(--fake-border); padding: 7px 13px; border-radius: var(--r-sm);
+  cursor: pointer; white-space: nowrap;
+  transition: border-color 0.15s var(--ease), background 0.15s var(--ease), transform 0.15s var(--ease);
+}
+.delete-btn:hover { border-color: var(--fake); background: var(--fake-bg); transform: translateY(-1px); }
+.delete-btn:active { transform: scale(0.97); }
+.delete-btn svg { flex-shrink: 0; }
+.delete-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+tr.row-removing { opacity: 0; transform: scale(0.98); transition: opacity 0.22s var(--ease), transform 0.22s var(--ease); }
+
+/* ── Delete confirmation modal ─────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: var(--scrim);
+  backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  z-index: 800;
+}
+.modal-backdrop[hidden] { display: none; }
+
+.modal-dialog {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  padding: 26px 24px;
+  max-width: 380px;
+  width: 100%;
+  animation: modalIn 0.22s var(--ease-out-back);
+}
+.modal-dialog h2 { font-size: 18px; color: var(--text); margin-bottom: 10px; }
+.modal-dialog p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .empty-state { text-align: center; padding: 70px 24px; color: var(--text-muted); font-size: 15.5px; }
-.empty-state a { color: var(--brand-2); font-weight: 650; text-decoration: none; border-bottom: 1px solid var(--brand-line); }
-.empty-state a:hover { border-bottom-color: var(--brand-2); }
+.empty-state a { color: var(--brand-text); font-weight: 650; text-decoration: none; border-bottom: 1px solid var(--brand-line); }
+.empty-state a:hover { border-bottom-color: var(--brand-text); }
 
 @media (max-width: 640px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+
+@media (max-width: 480px) {
+  .row-actions { gap: 6px; }
+  .delete-btn, .view-link { padding: 6px 10px; font-size: 12.5px; }
+  .modal-actions { flex-direction: column-reverse; }
+  .modal-actions .btn { width: 100%; }
+}

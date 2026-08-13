@@ -9,6 +9,7 @@ urlpatterns = [
     path("result/<int:pk>/",        views.result_view,          name="result"),
     path("result/<int:pk>/report/", views.download_report_view, name="download_report"),
     path("history/",                views.history_view,         name="history"),
+    path("history/<int:pk>/delete/", views.delete_record_view,  name="delete_record"),
     path("how-it-works/",           views.how_it_works_view,    name="how_it_works"),
     path("model/",                  views.model_view,           name="model"),
     path("reports/",                views.reports_view,         name="reports"),

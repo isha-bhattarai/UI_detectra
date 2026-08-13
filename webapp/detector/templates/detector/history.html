@@ -35,7 +35,7 @@
   </div>
 </div>
 
-<div class="card fade-up" style="animation-delay:.1s">
+<div class="card fade-up" id="history-card" style="animation-delay:.1s" data-upload-url="{% url 'detector:upload' %}">
   {% if records %}
   <div class="table-wrap">
     <table>
@@ -70,7 +70,21 @@
           <td class="cell-mono">{{ r.frames_analyzed }}</td>
           <td class="cell-mono">{{ r.processing_time|floatformat:1 }}s</td>
           <td class="cell-date">{{ r.created_at|date:"M d, H:i" }}</td>
-          <td><a class="view-link" href="{% url 'detector:result' r.pk %}">View →</a></td>
+          <td class="cell-actions">
+            <div class="row-actions">
+              <a class="view-link" href="{% url 'detector:result' r.pk %}">View →</a>
+              <button
+                type="button"
+                class="delete-btn"
+                data-delete-url="{% url 'detector:delete_record' r.pk %}"
+                data-label="{{ r.label }}"
+                aria-label="Delete analysis of {{ r.filename }}"
+              >
+                <svg viewBox="0 0 24 24" fill="none" width="14" height="14" aria-hidden="true"><path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m2 0v13a2 2 0 01-2 2H8a2 2 0 01-2-2V7h12z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Delete
+              </button>
+            </div>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -82,6 +96,20 @@
   </div>
   {% endif %}
 </div>
+
+{% if records %}
+<input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+<div class="modal-backdrop" id="delete-modal-backdrop" hidden>
+  <div class="modal-dialog" role="alertdialog" aria-modal="true" aria-labelledby="delete-modal-title" aria-describedby="delete-modal-desc">
+    <h2 id="delete-modal-title">Delete this analysis?</h2>
+    <p id="delete-modal-desc">This analysis report and its history will be permanently removed. This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" id="delete-modal-cancel">Cancel</button>
+      <button type="button" class="btn btn-danger" id="delete-modal-confirm">Delete</button>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 {% endblock %}
 
